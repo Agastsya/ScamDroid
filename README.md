@@ -1,3 +1,5 @@
+![Repository Logo](https://drive.google.com/uc?export=view&id=1Owsj0GFlXVR--xFpYnH-x2ZTRPip7YsF)
+
 # ScamDroid - Vulnerability Scanner and AI-Based Patching Recommendation Tool
 
 ## Overview
