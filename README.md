@@ -1,4 +1,4 @@
-# ScanDroid - Vulnerability Scanner and AI-Based Patching Recommendation Tool
+# ScamDroid - Vulnerability Scanner and AI-Based Patching Recommendation Tool
 
 ## Overview
 ScanDroid is an advanced security scanning and vulnerability patching recommendation tool designed to help users detect vulnerabilities in their infrastructure and web applications. It integrates multiple scanning tools like **Nmap, Lynis, Naabu, Gobuster, and Bandit**, along with an AI-based recommendation engine to provide intelligent patching suggestions.
@@ -79,9 +79,8 @@ scandroid/
 - Enhance AI recommendations with additional machine learning models.
 
 ## Contributors
-- **Your Name** - Developer
+- **Agastsya Joshi** - Developer
 - **Open to Contributions**
 
-## License
-This project is licensed under the MIT License.
+
 
