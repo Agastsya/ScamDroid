@@ -183,9 +183,9 @@ def main():
         print(f"\n{YELLOW}Main Menu:{RESET}")
         print(f"{BLUE}1){RESET} {GREEN}Infra Scanner (Nmap, Lynis & Naabu){RESET}")
         print(f"{BLUE}2){RESET} {GREEN}Web Scanner (Gobuster){RESET}")
-        print(f"{BLUE}3){RESET} {GREEN}View Logs{RESET}")
-        print(f"{BLUE}4){RESET} {GREEN}Get AI Recommendations{RESET}")
-        print(f"{BLUE}5){RESET} {GREEN}Bandit Scanner{RESET}")
+        print(f"{BLUE}3){RESET} {GREEN}Bandit Scanner{RESET}")
+        print(f"{BLUE}4){RESET} {GREEN}View Logs{RESET}")
+        print(f"{BLUE}5){RESET} {GREEN}Get AI Recommendations{RESET}")
         print(f"{BLUE}6){RESET} {GREEN}Exit{RESET}")
         
         try:
@@ -195,11 +195,11 @@ def main():
             elif choice == 2:
                 web_scanner()
             elif choice == 3:
-                view_logs()
-            elif choice == 4:
-                run_ai_recommendations()
-            elif choice == 5:
                 run_bandit_scan()
+            elif choice == 4:
+                view_logs()
+            elif choice == 5:
+                run_ai_recommendations()
             elif choice == 6:
                 print(f"{GREEN}Exiting...{RESET}")
                 break
