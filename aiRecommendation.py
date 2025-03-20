@@ -10,14 +10,12 @@ LOG_FILE_PATH = os.path.join(LOG_DIR, "scanner_file.txt")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "aiReport")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "ai_report.txt")
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
-API_KEY = "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"  # Replace if needed
 
-# Rate limit settings
-MAX_CHARS_PER_REQUEST = 6000  # Conservative estimate (1 token ≈ 4 characters)
-CHUNK_OVERHEAD = 500          # Space for prompts and formatting
-MAX_RETRIES = 3
-RETRY_DELAY = 5
-REQUEST_DELAY = 1.5
+# Use the provided Groq API key
+API_KEY ={"api key"}
+if not API_KEY:
+    print("Error: API key not found. Please set the GROQ_API_KEY environment variable.")
+    sys.exit(1)
 
 headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 

@@ -1,12 +1,17 @@
-[![Repository Logo](https://drive.google.com/uc?export=view&id=1tTuLA0cuMH0Sm5hiHb5Pwq-xheq7D55r)](https://drive.google.com/file/d/1tTuLA0cuMH0Sm5hiHb5Pwq-xheq7D55r/view?usp=drive_link)
-
-
-
+<p align="center">
+  <a href="https://drive.google.com/file/d/1tTuLA0cuMH0Sm5hiHb5Pwq-xheq7D55r/view?usp=drive_link">
+    <img src="https://drive.google.com/uc?export=view&id=1tTuLA0cuMH0Sm5hiHb5Pwq-xheq7D55r" alt="Repository Logo">
+  </a>
+</p>
 
 # ScamDroid - Vulnerability Scanner and AI-Based Patching Recommendation Tool
 
 ## Overview
 ScanDroid is an advanced security scanning and vulnerability patching recommendation tool designed to help users detect vulnerabilities in their infrastructure and web applications. It integrates multiple scanning tools like **Nmap, Lynis, Naabu, Gobuster, and Bandit**, along with an AI-based recommendation engine to provide intelligent patching suggestions.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/73b7b1d6-b822-4a0a-b34e-e8ed34cb8f33" alt="Screenshot from 2025-03-21 00-36-00">
+</p>
 
 ## Features
 - **Infrastructure Scanning:** Uses Nmap, Lynis, and Naabu for network and system vulnerability detection.
