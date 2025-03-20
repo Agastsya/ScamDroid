@@ -5,6 +5,8 @@ import datetime
 import webbrowser
 from urllib.parse import urlparse
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -12,9 +14,9 @@ BLUE = "\033[94m"
 CYAN = "\033[96m"
 RESET = "\033[0m"  
 
-LOG_DIR = "/home/kali/Downloads/finalScanner/reports"
-LOG_FILE = f"{LOG_DIR}/scanner_file.txt"
-HTML_LOG_FILE = f"{LOG_DIR}/scanner_file.html"
+LOG_DIR = os.path.join(SCRIPT_DIR, "reports")
+LOG_FILE = os.path.join(LOG_DIR, "scanner_file.txt")
+HTML_LOG_FILE = os.path.join(LOG_DIR, "scanner_file.html")
 
 # Ensure log directory exists
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -62,13 +64,49 @@ def run_bandit_scan():
 
 def run_lynis_scan():
     print(f"{GREEN}Running Lynis audit on the local system...{RESET}")
-    result = subprocess.run(['sudo', 'lynis', 'audit', 'system'],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            text=True)
-    output = result.stdout if result.returncode == 0 else result.stderr
-    print(f"{CYAN}Lynis audit results:\n{RESET}{output}")
-    log_result("Lynis Audit", output)
+
+    try:
+        # Check if Lynis is installed
+        subprocess.run(['lynis', '--version'],
+                       check=True,
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print(f"{RED}ERROR: Lynis not found. Please install Lynis first.{RESET}")
+        print("Installation instructions: https://cisofy.com/lynis/")
+        return
+
+    try:
+        # Since the script runs as root, no need for sudo
+        process = subprocess.Popen(
+            ['lynis', 'audit', 'system', '--quick', '--no-colors'],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1
+        )
+
+        output_lines = []
+        while True:
+            line = process.stdout.readline()
+            if not line:
+                break
+            print(line, end='')  # Print each line as it appears
+            sys.stdout.flush()
+            output_lines.append(line.strip())  # Store output for logging
+
+        process.stdout.close()
+        process.wait()
+
+        # Combine output and log it
+        output = "\n".join(output_lines)
+        print(f"{CYAN}Lynis audit completed. Saving results...{RESET}")
+        log_result("Lynis Audit", output)
+
+    except subprocess.TimeoutExpired:
+        print(f"{RED}ERROR: Lynis scan timed out after 10 minutes{RESET}")
+    except Exception as e:
+        print(f"{RED}Error running Lynis scan: {str(e)}{RESET}")
+
+
 
 def run_naabu_scanner(target_ip):
     print(f"{GREEN}Running Naabu scan on {target_ip}...{RESET}")
@@ -113,7 +151,7 @@ def run_ai_recommendations():
     print(f"{GREEN}Generating AI security recommendations...{RESET}")
     try:
         result = subprocess.run(
-            ['python3', '/home/kali/Downloads/finalScanner/aiRecommendation.py'],
+            ['python3', os.path.join(SCRIPT_DIR, "aiRecommendation.py")],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True

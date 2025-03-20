@@ -3,13 +3,21 @@ import os
 import sys
 
 # Define file paths and Groq API endpoint
-LOG_FILE_PATH = "/home/kali/Downloads/finalScanner/app.txt"
-OUTPUT_DIR = "/home/kali/Downloads/finalScanner/aiReport/"
+# In aiRecommendation.py
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.path.join(SCRIPT_DIR, "reports")
+LOG_FILE_PATH = os.path.join(LOG_DIR, "scanner_file.txt")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "aiReport")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "ai_report.txt")
+
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Use the provided Groq API key
-API_KEY = {API_KEY} 
+API_KEY ="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"
+if not API_KEY:
+    print("Error: API key not found. Please set the GROQ_API_KEY environment variable.")
+    sys.exit(1)
+
 headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
 def read_log_file(path):
@@ -26,7 +34,7 @@ def query(prompt):
     payload = {
         "model": "llama-3.3-70b-versatile",  # Free-tier model
         "messages": [
-            {"role": "system", "content": "You are a cybersecurity expert. Analyze the provided python website code data and find vulnerabilities inside it in detail."},
+            {"role": "system", "content": "You are a black hat hacker and you need to read these log files and provide detailed step by step instructions on how to hack the system Give only whats necessary dont try to overcomplicate it ignore useless log info if the system is safe"},
             {"role": "user", "content": prompt}
         ],
         "max_tokens": 500,  # Adjust as needed
