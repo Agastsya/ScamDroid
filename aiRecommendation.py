@@ -11,8 +11,15 @@ OUTPUT_DIR = os.path.join(SCRIPT_DIR, "aiReport")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "ai_report.txt")
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# Use the provided Groq API key
-API_KEY ={"api key"}
+# Updated timeout configuration
+MAX_CHARS_PER_REQUEST = 5000 
+CHUNK_OVERHEAD = 400          
+MAX_RETRIES = 4               
+RETRY_DELAY = 7               
+REQUEST_DELAY = 2             
+API_TIMEOUT = 45              
+
+API_KEY = "enter-api-key-here"  # Replace with actual API key
 if not API_KEY:
     print("Error: API key not found. Please set the GROQ_API_KEY environment variable.")
     sys.exit(1)
@@ -20,7 +27,7 @@ if not API_KEY:
 headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
 def read_and_chunk_log(path):
-    """Split log into manageable character-limited chunks"""
+    """Split log into manageable chunks with better error handling"""
     try:
         with open(path, "r") as file:
             log_data = file.read()
@@ -29,17 +36,18 @@ def read_and_chunk_log(path):
         current_chunk = []
         current_count = 0
         
-        for line in log_data.split('\n'):
-            line_length = len(line)
-            if current_count + line_length > (MAX_CHARS_PER_REQUEST - CHUNK_OVERHEAD):
-                chunks.append('\n'.join(current_chunk))
+        # Smarter chunking with paragraph awareness
+        for paragraph in log_data.split('\n\n'):
+            para_length = len(paragraph)
+            if current_count + para_length > (MAX_CHARS_PER_REQUEST - CHUNK_OVERHEAD):
+                chunks.append('\n\n'.join(current_chunk))
                 current_chunk = []
                 current_count = 0
-            current_chunk.append(line)
-            current_count += line_length
+            current_chunk.append(paragraph)
+            current_count += para_length
 
         if current_chunk:
-            chunks.append('\n'.join(current_chunk))
+            chunks.append('\n\n'.join(current_chunk))
 
         return chunks
 
@@ -48,32 +56,44 @@ def read_and_chunk_log(path):
         return []
 
 def query_with_retry(prompt, chunk_num):
-    """Handle API requests with retry logic"""
-    for attempt in range(MAX_RETRIES):
+    """Improved retry logic with timeout handling"""
+    for attempt in range(1, MAX_RETRIES + 1):
         try:
             payload = {
                 "model": "llama-3.3-70b-versatile",
                 "messages": [
-                    {"role": "system", "content": "Analyze logs for security vulnerabilities. Provide concise steps."},
+                    {"role": "system", "content": "Analyze logs for security vulnerabilities and Provide concise steps in json format"},
                     {"role": "user", "content": prompt}
                 ],
                 "max_tokens": 400,
                 "temperature": 0.7
             }
 
-            response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+            response = requests.post(
+                API_URL,
+                headers=headers,
+                json=payload,
+                timeout=API_TIMEOUT
+            )
             response.raise_for_status()
             return response.json()
 
-        except requests.exceptions.HTTPError as e:
-            if response.status_code == 429:
-                wait = RETRY_DELAY * (attempt + 1)
-                print(f"Rate limited. Retrying in {wait}s...")
-                time.sleep(wait)
-            else:
-                print(f"API Error: {str(e)}")
-                return None
+        except requests.exceptions.Timeout:
+            print(f"⌛ Timeout on chunk {chunk_num}, attempt {attempt}/{MAX_RETRIES}")
+            if attempt < MAX_RETRIES:
+                backoff = RETRY_DELAY * attempt
+                print(f"⏳ Retrying in {backoff} seconds...")
+                time.sleep(backoff)
+            continue
+            
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ API Error: {str(e)}")
+            return None
+
+    print(f"❌ Failed to process chunk {chunk_num} after {MAX_RETRIES} attempts")
     return None
+
+# Rest of the functions remain the same (save_output, main)
 
 def save_output(content):
     """Save aggregated results to file"""
@@ -81,21 +101,21 @@ def save_output(content):
         os.makedirs(OUTPUT_DIR, exist_ok=True)
         with open(OUTPUT_FILE, "w") as file:
             file.write(content)
-        print(f"\nReport saved to: {OUTPUT_FILE}")
+        print(f"\n✅ Report saved to: {OUTPUT_FILE}")
     except Exception as e:
-        print(f"Error saving output: {e}")
+        print(f"❌ Error saving output: {e}")
 
 def main():
     chunks = read_and_chunk_log(LOG_FILE_PATH)
     if not chunks:
-        print("No log data processed. Exiting.")
+        print("❌ No log data processed. Exiting.")
         return
 
-    print(f"Processing {len(chunks)} log chunks...")
+    print(f"📊 Processing {len(chunks)} log chunks...")
     full_report = []
 
     for i, chunk in enumerate(chunks, 1):
-        print(f"\nAnalyzing chunk {i}/{len(chunks)}")
+        print(f"\n🔍 Analyzing chunk {i}/{len(chunks)}")
         prompt = f"Analyze these log entries for security issues:\n{chunk}\nFocus on critical vulnerabilities."
 
         result = query_with_retry(prompt, i)
@@ -105,15 +125,15 @@ def main():
             full_report.append(f"\n\n--- Chunk {i} Analysis ---\n{response}")
             time.sleep(REQUEST_DELAY)
         else:
-            print(f"Failed to process chunk {i}")
+            print(f"⚠️ Failed to process chunk {i}")
 
     if full_report:
-        final_report = "SECURITY ANALYSIS REPORT\n" + "\n".join(full_report)
-        print("\nFinal Report Summary:")
-        print(final_report[:500] + "...")  # Preview first 500 characters
+        final_report = "🛡️ SECURITY ANALYSIS REPORT\n" + "\n".join(full_report)
+        print("\n📄 Final Report Summary:")
+        print(final_report[:500] + "...")
         save_output(final_report)
     else:
-        print("No analysis generated from any chunks")
+        print("⚠️ No analysis generated from any chunks")
 
 if __name__ == "__main__":
     main()
