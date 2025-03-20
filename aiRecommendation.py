@@ -13,7 +13,7 @@ OUTPUT_FILE = os.path.join(OUTPUT_DIR, "ai_report.txt")
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Use the provided Groq API key
-API_KEY ="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"
+API_KEY ={"api key"}
 if not API_KEY:
     print("Error: API key not found. Please set the GROQ_API_KEY environment variable.")
     sys.exit(1)
