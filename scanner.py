@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import time
 import os
 import datetime
 import webbrowser
@@ -14,12 +15,40 @@ BLUE = "\033[94m"
 CYAN = "\033[96m"
 RESET = "\033[0m"  
 
+class Color:
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    WHITE = '\033[97m'
+    RESET = '\033[0m'
+
 LOG_DIR = os.path.join(SCRIPT_DIR, "reports")
 LOG_FILE = os.path.join(LOG_DIR, "scanner_file.txt")
 HTML_LOG_FILE = os.path.join(LOG_DIR, "scanner_file.html")
 
 # Ensure log directory exists
 os.makedirs(LOG_DIR, exist_ok=True)
+
+def display_banner():
+    banner = rf"""
+{Color.RED}
+███████╗ ██████╗ █████╗ ███╗   ███╗██████╗ ██████╗  ██████╗ ██╗██████╗ 
+██╔════╝██╔════╝██╔══██╗████╗ ████║██╔══██╗██╔══██╗██╔═══██╗██║██╔══██╗
+███████╗██║     ███████║██╔████╔██║██║  ██║██████╔╝██║   ██║██║██║  ██║
+╚════██║██║     ██╔══██║██║╚██╔╝██║██║  ██║██╔══██╗██║   ██║██║██║  ██║
+███████║╚██████╗██║  ██║██║ ╚═╝ ██║██████╔╝██║  ██║╚██████╔╝██║██████╔╝
+╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝╚═════╝ 
+{Color.CYAN}                                                              v2.0.1
+{Color.YELLOW} [Vulnerability Scanner and AI-Based Patching Recommendation Tool]
+{Color.RESET}
+"""
+    # Typewriter effect
+    for line in banner.split('\n'):
+        print(line)
+        time.sleep(0.05) if not sys.platform.startswith('win') else None
 
 def log_result(scan_type, result):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -168,10 +197,10 @@ def view_logs():
 def infra_scanner():
     while True:
         print(f"\n{YELLOW}Infra Scanner Options:{RESET}")
-        print(f"{BLUE}1){RESET} {GREEN}Scan multiple IPs using Nmap{RESET}")
-        print(f"{BLUE}2){RESET} {GREEN}Run Lynis scan{RESET}")
-        print(f"{BLUE}3){RESET} {GREEN}Scan multiple IPs using Naabu{RESET}")
-        print(f"{BLUE}4){RESET} {GREEN}Back to Main Menu{RESET}")
+        print(f"{BLUE}(1){RESET} {GREEN}Scan multiple IPs using Nmap{RESET}")
+        print(f"{BLUE}(2){RESET} {GREEN}Run Lynis scan{RESET}")
+        print(f"{BLUE}(3){RESET} {GREEN}Scan multiple IPs using Naabu{RESET}")
+        print(f"{BLUE}(4){RESET} {GREEN}Back to Main Menu{RESET}")
         
         try:
             choice = int(input(f"\n{CYAN}Enter your choice (1-4): {RESET}"))
@@ -213,18 +242,19 @@ def web_scanner():
             print(f"{RED}Invalid input. Please enter a numeric value.{RESET}")
 
 def main():
+    display_banner()
     if os.geteuid() != 0:
         print(f"{RED}This script requires root privileges. Please run with 'sudo'.{RESET}")
         sys.exit(1)
     
     while True:
         print(f"\n{YELLOW}Main Menu:{RESET}")
-        print(f"{BLUE}1){RESET} {GREEN}Infra Scanner (Nmap, Lynis & Naabu){RESET}")
-        print(f"{BLUE}2){RESET} {GREEN}Web Scanner (Gobuster){RESET}")
-        print(f"{BLUE}3){RESET} {GREEN}Bandit Scanner{RESET}")
-        print(f"{BLUE}4){RESET} {GREEN}View Logs{RESET}")
-        print(f"{BLUE}5){RESET} {GREEN}Get AI Recommendations{RESET}")
-        print(f"{BLUE}6){RESET} {GREEN}Exit{RESET}")
+        print(f"{BLUE}(1){RESET} {GREEN}Infrastructure Scanners{RESET}")
+        print(f"{BLUE}(2){RESET} {GREEN}Web Scanner (Gobuster){RESET}")
+        print(f"{BLUE}(3){RESET} {GREEN}Bandit Scanner{RESET}")
+        print(f"{BLUE}(4){RESET} {GREEN}View Logs{RESET}")
+        print(f"{BLUE}(5){RESET} {GREEN}Get AI Recommendations{RESET}")
+        print(f"{BLUE}(6){RESET} {GREEN}Exit{RESET}")
         
         try:
             choice = int(input(f"\n{CYAN}Enter your choice (1-6): {RESET}"))

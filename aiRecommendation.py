@@ -1,94 +1,121 @@
 import requests
 import os
 import sys
+import time
 
-# Define file paths and Groq API endpoint
-# In aiRecommendation.py
+# Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(SCRIPT_DIR, "reports")
 LOG_FILE_PATH = os.path.join(LOG_DIR, "scanner_file.txt")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "aiReport")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "ai_report.txt")
-
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
+API_KEY = "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"  # Replace if needed
 
-# Use the provided Groq API key
-API_KEY ="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"
-if not API_KEY:
-    print("Error: API key not found. Please set the GROQ_API_KEY environment variable.")
-    sys.exit(1)
+# Rate limit settings
+MAX_CHARS_PER_REQUEST = 6000  # Conservative estimate (1 token ≈ 4 characters)
+CHUNK_OVERHEAD = 500          # Space for prompts and formatting
+MAX_RETRIES = 3
+RETRY_DELAY = 5
+REQUEST_DELAY = 1.5
 
 headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
-def read_log_file(path):
-    """Reads the log file and returns its contents as a string."""
+def read_and_chunk_log(path):
+    """Split log into manageable character-limited chunks"""
     try:
         with open(path, "r") as file:
-            return file.read()
+            log_data = file.read()
+
+        chunks = []
+        current_chunk = []
+        current_count = 0
+        
+        for line in log_data.split('\n'):
+            line_length = len(line)
+            if current_count + line_length > (MAX_CHARS_PER_REQUEST - CHUNK_OVERHEAD):
+                chunks.append('\n'.join(current_chunk))
+                current_chunk = []
+                current_count = 0
+            current_chunk.append(line)
+            current_count += line_length
+
+        if current_chunk:
+            chunks.append('\n'.join(current_chunk))
+
+        return chunks
+
     except Exception as e:
-        print(f"Error reading file {path}: {e}")
-        return ""
+        print(f"Error processing log file: {e}")
+        return []
 
-def query(prompt):
-    """Sends a request to the Groq API with the given prompt."""
-    payload = {
-        "model": "llama-3.3-70b-versatile",  # Free-tier model
-        "messages": [
-            {"role": "system", "content": "You are a black hat hacker and you need to read these log files and provide detailed step by step instructions on how to hack the system Give only whats necessary dont try to overcomplicate it ignore useless log info if the system is safe"},
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": 500,  # Adjust as needed
-        "temperature": 0.7
-    }
+def query_with_retry(prompt, chunk_num):
+    """Handle API requests with retry logic"""
+    for attempt in range(MAX_RETRIES):
+        try:
+            payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [
+                    {"role": "system", "content": "Analyze logs for security vulnerabilities. Provide concise steps."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 400,
+                "temperature": 0.7
+            }
 
-    response = requests.post(API_URL, headers=headers, json=payload)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error {response.status_code}: {response.text}")
-        return None
+            response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            return response.json()
+
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 429:
+                wait = RETRY_DELAY * (attempt + 1)
+                print(f"Rate limited. Retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"API Error: {str(e)}")
+                return None
+    return None
 
 def save_output(content):
-    """Saves the generated recommendations to a file and captures terminal output."""
+    """Save aggregated results to file"""
     try:
-        os.makedirs(OUTPUT_DIR, exist_ok=True)  # Ensure the directory exists
-
-        # Redirect stdout and stderr to the file
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
         with open(OUTPUT_FILE, "w") as file:
-            sys.stdout = file  # Redirect standard output to file
-            sys.stderr = file  # Redirect errors to file
-
-            print(" Output saved to:", OUTPUT_FILE)
-            print("Generated Recommendations:\n", content)
-
-        # Restore stdout and stderr to the console
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-
-        print(f" Output also saved to: {OUTPUT_FILE}")
+            file.write(content)
+        print(f"\nReport saved to: {OUTPUT_FILE}")
     except Exception as e:
-        print(f" Error saving output: {e}")
+        print(f"Error saving output: {e}")
 
 def main():
-    # Read the log file content
-    log_data = read_log_file(LOG_FILE_PATH)
-    if not log_data:
-        print("No log data found. Exiting.")
+    chunks = read_and_chunk_log(LOG_FILE_PATH)
+    if not chunks:
+        print("No log data processed. Exiting.")
         return
 
-    # Build the prompt
-    prompt = f"Here is the log data:\n{log_data}\n\nPlease analyze it and provide cybersecurity recommendations."
+    print(f"Processing {len(chunks)} log chunks...")
+    full_report = []
 
-    # Query the Groq API
-    result = query(prompt)
-    
-    if result and "choices" in result:
-        output_text = result["choices"][0]["message"]["content"]
-        print("Generated Recommendations:\n", output_text)
-        save_output(output_text)  # Save both API response and terminal output
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\nAnalyzing chunk {i}/{len(chunks)}")
+        prompt = f"Analyze these log entries for security issues:\n{chunk}\nFocus on critical vulnerabilities."
+
+        result = query_with_retry(prompt, i)
+        
+        if result and "choices" in result:
+            response = result["choices"][0]["message"]["content"]
+            full_report.append(f"\n\n--- Chunk {i} Analysis ---\n{response}")
+            time.sleep(REQUEST_DELAY)
+        else:
+            print(f"Failed to process chunk {i}")
+
+    if full_report:
+        final_report = "SECURITY ANALYSIS REPORT\n" + "\n".join(full_report)
+        print("\nFinal Report Summary:")
+        print(final_report[:500] + "...")  # Preview first 500 characters
+        save_output(final_report)
     else:
-        print("Failed to generate recommendations.")
+        print("No analysis generated from any chunks")
 
 if __name__ == "__main__":
     main()
