@@ -41,7 +41,7 @@ def display_banner():
 ╚════██║██║     ██╔══██║██║╚██╔╝██║██║  ██║██╔══██╗██║   ██║██║██║  ██║
 ███████║╚██████╗██║  ██║██║ ╚═╝ ██║██████╔╝██║  ██║╚██████╔╝██║██████╔╝
 ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝╚═════╝ 
-{Color.CYAN}                                                              v2.0.1
+{Color.CYAN}                                                              v0.0.1
 {Color.YELLOW} [Vulnerability Scanner and AI-Based Patching Recommendation Tool]
 {Color.RESET}
 """
@@ -140,7 +140,8 @@ def run_lynis_scan():
 def run_naabu_scanner(target_ip):
     print(f"{GREEN}Running Naabu scan on {target_ip}...{RESET}")
     try:
-        result = subprocess.run(['naabu', '-host', target_ip],
+        # Replace '/usr/local/bin/naabu' with the correct path if needed
+        result = subprocess.run(['/home/agastsya-joshi/go/bin/naabu', '-host', target_ip],
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 text=True)
@@ -150,6 +151,7 @@ def run_naabu_scanner(target_ip):
     output = result.stdout if result.returncode == 0 else result.stderr
     print(f"{CYAN}Naabu scan results for {target_ip}:\n{RESET}{output}")
     log_result("Naabu Scan", f"Target: {target_ip}\n{output}")
+
 
 def run_gobuster_scan(target_url):
     # Validate URL
