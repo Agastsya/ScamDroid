@@ -26,11 +26,14 @@ class Color:
     RESET = '\033[0m'
 
 LOG_DIR = os.path.join(SCRIPT_DIR, "reports")
+AI_LOG_DIR = os.path.join(SCRIPT_DIR, "aiReport")
+AI_LOG_FILE = os.path.join(AI_LOG_DIR, "ai_report.txt") 
 LOG_FILE = os.path.join(LOG_DIR, "scanner_file.txt")
 HTML_LOG_FILE = os.path.join(LOG_DIR, "scanner_file.html")
 
 # Ensure log directory exists
 os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(AI_LOG_DIR, exist_ok=True)
 
 def display_banner():
     banner = rf"""
@@ -57,6 +60,31 @@ def log_result(scan_type, result):
     
     with open(HTML_LOG_FILE, "a") as html_log:
         html_log.write(f"<h2>{scan_type} Results ({timestamp})</h2><pre>{result}</pre><hr>")
+
+
+def ai_log_result(scan_type, result):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(AI_LOG_FILE, "a") as log:  # Fixed variable name
+        log.write(f"[{timestamp}] {scan_type} Results:\n{result}\n\n")
+    
+    with open(HTML_LOG_FILE, "a") as html_log:
+        html_log.write(f"<h2>{scan_type} Results ({timestamp})</h2><pre>{result}</pre><hr>")
+
+def view_ai_logs():  # New function to view AI logs
+    print(f"{GREEN}Displaying AI log contents...{RESET}")
+    try:
+        if not os.path.exists(AI_LOG_FILE):
+            print(f"{YELLOW}No AI logs found.{RESET}")
+            return
+            
+        with open(AI_LOG_FILE, "r") as f:
+            contents = f.read()
+            print(f"{CYAN}AI Logs:\n{RESET}{contents}")
+    except Exception as e:
+        print(f"{RED}Error reading AI log file: {e}{RESET}")
+
+
+
 
 def run_nmap_scan(target_ip):
     print(f"{GREEN}Running Nmap scan on {target_ip}...{RESET}")
@@ -255,8 +283,9 @@ def main():
         print(f"{BLUE}(2){RESET} {GREEN}Web Scanner (Gobuster){RESET}")
         print(f"{BLUE}(3){RESET} {GREEN}Bandit Scanner{RESET}")
         print(f"{BLUE}(4){RESET} {GREEN}View Logs{RESET}")
-        print(f"{BLUE}(5){RESET} {GREEN}Get AI Recommendations{RESET}")
-        print(f"{BLUE}(6){RESET} {GREEN}Exit{RESET}")
+        print(f"{BLUE}(5){RESET} {GREEN}View AI Logs{RESET}")
+        print(f"{BLUE}(6){RESET} {GREEN}Get AI Recommendations{RESET}")
+        print(f"{BLUE}(7){RESET} {GREEN}Exit{RESET}")
         
         try:
             choice = int(input(f"\n{CYAN}Enter your choice (1-6): {RESET}"))
@@ -269,8 +298,10 @@ def main():
             elif choice == 4:
                 view_logs()
             elif choice == 5:
-                run_ai_recommendations()
+                view_ai_logs()
             elif choice == 6:
+                run_ai_recommendations()
+            elif choice == 7:
                 print(f"{GREEN}Exiting...{RESET}")
                 break
             else:
