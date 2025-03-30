@@ -5,6 +5,8 @@ import os
 import datetime
 import webbrowser
 from urllib.parse import urlparse
+import argparse
+from scheduler import ScannerScheduler
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
