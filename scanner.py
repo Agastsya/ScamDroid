@@ -70,6 +70,9 @@ def ai_log_result(scan_type, result):
     with open(HTML_LOG_FILE, "a") as html_log:
         html_log.write(f"<h2>{scan_type} Results ({timestamp})</h2><pre>{result}</pre><hr>")
 
+def delete_logs():
+    open(LOG_FILE, "w").close()
+
 def view_ai_logs():  # New function to view AI logs
     print(f"{GREEN}Displaying AI log contents...{RESET}")
     try:
@@ -301,6 +304,8 @@ def main():
                 view_ai_logs()
             elif choice == 6:
                 run_ai_recommendations()
+            elif choice == 0:
+                delete_logs()
             elif choice == 7:
                 print(f"{GREEN}Exiting...{RESET}")
                 break

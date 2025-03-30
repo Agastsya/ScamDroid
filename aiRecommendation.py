@@ -19,7 +19,7 @@ RETRY_DELAY = 7
 REQUEST_DELAY = 2             
 API_TIMEOUT = 45              
 
-API_KEY = "enter-api-key-here"  # Replace with actual API key
+API_KEY = "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"  
 if not API_KEY:
     print("Error: API key not found. Please set the GROQ_API_KEY environment variable.")
     sys.exit(1)
