@@ -89,7 +89,9 @@ scandroid/
 - Enhance AI recommendations with additional machine learning models.
 
 ## Contributors
-- **Agastsya Joshi** - Developer
+- **Agastsya Joshi** - Co-founder
+- **Karman Arora** - Co-founder
+- **Nitin Dogra** - Co-founder
 - **Open to Contributions**
 
 
