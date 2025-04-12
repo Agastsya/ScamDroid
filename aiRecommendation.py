@@ -16,10 +16,10 @@ MAX_CHARS_PER_REQUEST = 5000
 CHUNK_OVERHEAD = 400          
 MAX_RETRIES = 4               
 RETRY_DELAY = 7               
-REQUEST_DELAY = 2             
+REQUEST_DELAY = 5             
 API_TIMEOUT = 45              
 
-API_KEY = "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"  
+API_KEY = "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"  
 if not API_KEY:
     print("Error: API key not found. Please set the GROQ_API_KEY environment variable.")
     sys.exit(1)
@@ -62,7 +62,7 @@ def query_with_retry(prompt, chunk_num):
             payload = {
                 "model": "llama-3.3-70b-versatile",
                 "messages": [
-                    {"role": "system", "content": "Analyze logs for security vulnerabilities and Provide concise steps in json format"},
+                    {"role": "system", "content": "Act like a Cybersecurity Professional/Engineer and then Analyze logs for security vulnerabilities and Provide concise steps in json format and provide specific commands for fixing vulnerabilities"},
                     {"role": "user", "content": prompt}
                 ],
                 "max_tokens": 400,
@@ -116,7 +116,7 @@ def main():
 
     for i, chunk in enumerate(chunks, 1):
         print(f"\n🔍 Analyzing chunk {i}/{len(chunks)}")
-        prompt = f"Analyze these log entries for security issues:\n{chunk}\nFocus on critical vulnerabilities."
+        prompt = f"Act like a Cybersecurity Professional/Engineer and then Analyze logs for security vulnerabilities and Provide concise steps in json format and provide specific commands for fixing vulnerabilities"
 
         result = query_with_retry(prompt, i)
         
