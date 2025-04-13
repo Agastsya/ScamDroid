@@ -51,7 +51,7 @@ def display_banner():
 ███████║╚██████╗██║  ██║██║ ╚═╝ ██║██████╔╝██║  ██║╚██████╔╝██║██████╔╝
 ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝╚═════╝ 
 {Color.CYAN}                                                              v0.0.1
-{Color.YELLOW} [Vulnerability Scanner and AI-Based Patching Recommendation Tool]
+{Color.MAGENTA}[ETHEREUM BASED]{Color.YELLOW}[Vulnerability Scanner and AI-Based Patching and Recommendation Tool]
 {Color.RESET}
 """
     # Typewriter effect
@@ -508,6 +508,30 @@ def infra_scanner():
         except ValueError:
             print(f"{RED}Invalid input. Please enter a numeric value.{RESET}")
 
+def run_patching_system():
+    print(f"{GREEN}Running security patching system...{RESET}")
+    patching_log = "/home/agastsya-joshi/Documents/ScamDroid/aiReport/ai_report.txt"
+    
+    # Verify AI report exists
+    if not os.path.exists(patching_log):
+        print(f"{RED}Error: AI report not found at {patching_log}{RESET}")
+        print(f"{YELLOW}Please generate an AI report first{RESET}")
+        return
+
+    try:
+        # Backup original arguments
+        original_argv = sys.argv.copy()
+        try:
+            # Simulate command line arguments for patching system
+            sys.argv = ["patchingSystem.py", patching_log]
+            print(f"{CYAN}Processing security recommendations from:{RESET} {patching_log}")
+            patchingSystem.main()
+        finally:
+            # Restore original arguments
+            sys.argv = original_argv
+    except Exception as e:
+        print(f"{RED}Error during patching: {str(e)}{RESET}")
+
 def web_scanner():
     while True:
         print(f"\n{YELLOW}Web Scanner Options:{RESET}")
@@ -540,6 +564,8 @@ def main():
         print(f"{BLUE}(4){RESET} {GREEN}View Logs{RESET}")
         print(f"{BLUE}(5){RESET} {GREEN}View AI Logs{RESET}")
         print(f"{BLUE}(6){RESET} {GREEN}Get AI Recommendations{RESET}")
+        print(f"{BLUE}(7){RESET} {GREEN}Initiate Patching System{RESET}")
+        print(f"{BLUE}(8){RESET} {GREEN}Upload Files to backend{RESET}")
         print(f"{BLUE}(9){RESET} {GREEN}Exit{RESET}")
         
         try:
@@ -557,7 +583,7 @@ def main():
             elif choice == 6:
                 run_ai_recommendations()
             elif choice == 7:
-                generate_csv_reports()
+                run_patching_system()
             elif choice == 8:
                 run_backend()
             elif choice == 9:
