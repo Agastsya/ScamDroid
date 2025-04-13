@@ -51,7 +51,7 @@ def display_banner():
 ███████║╚██████╗██║  ██║██║ ╚═╝ ██║██████╔╝██║  ██║╚██████╔╝██║██████╔╝
 ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝╚═════╝ 
 {Color.CYAN}                                                              v0.0.1
-{Color.YELLOW} [Vulnerability Scanner and AI-Based Patching Recommendation Tool]
+{Color.MAGENTA}[ETHEREUM BASED]{Color.YELLOW}[Vulnerability Scanner and AI-Based Patching and Recommendation Tool]
 {Color.RESET}
 """
     # Typewriter effect
