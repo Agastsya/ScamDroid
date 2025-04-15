@@ -10,7 +10,7 @@
 ScanDroid is an advanced security scanning and vulnerability patching recommendation tool designed to help users detect vulnerabilities in their infrastructure and web applications. It integrates multiple scanning tools like **Nmap, Lynis, Naabu, Gobuster, and Bandit**, along with an AI-based recommendation engine to provide intelligent patching suggestions.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/73b7b1d6-b822-4a0a-b34e-e8ed34cb8f33" alt="Screenshot from 2025-03-21 00-36-00">
+  <img src="https://github.com/user-attachments/assets/dd4bc53a-3c42-4737-a939-bca59c1c7a5e" alt="Screenshot from 2025-03-21 00-36-00">
 </p>
 
 ## Features
