@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Automated Infrastructure Vulnerability Scanner and AI-Based Patching Recommendation Tool
+# AI Automated Infrastructure Vulnerability Scanner and Patching Tool with Ethereum and SIEM Integration
 
 ## Overview
 This is an advanced security scanning and vulnerability patching recommendation tool designed to help users detect vulnerabilities in their infrastructure and web applications. It integrates multiple scanning tools like **Nmap, Lynis, Naabu, Gobuster, and Bandit**, along with an AI-based recommendation engine to provide intelligent patching suggestions.
