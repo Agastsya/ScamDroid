@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clickjacking Tester</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; padding: 24px; }
+  h1 { font-size: 1.4rem; font-weight: 600; color: #f8fafc; margin-bottom: 4px; }
+  .subtitle { color: #64748b; font-size: 0.85rem; margin-bottom: 24px; }
+  .input-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  input[type="url"] {
+    flex: 1; min-width: 260px; padding: 10px 14px;
+    background: #1e2330; border: 1px solid #2d3348; border-radius: 8px;
+    color: #e2e8f0; font-size: 0.95rem; outline: none;
+  }
+  input[type="url"]:focus { border-color: #6366f1; }
+  button {
+    padding: 10px 20px; border: none; border-radius: 8px;
+    background: #6366f1; color: #fff; font-size: 0.95rem;
+    cursor: pointer; font-weight: 500;
+  }
+  button:hover { background: #4f46e5; }
+  .result-banner {
+    display: none; padding: 12px 16px; border-radius: 8px;
+    font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;
+  }
+  .vulnerable  { background: #7f1d1d; border: 1px solid #ef4444; color: #fca5a5; }
+  .protected   { background: #14532d; border: 1px solid #22c55e; color: #86efac; }
+  .unknown     { background: #1c1f2b; border: 1px solid #64748b; color: #94a3b8; }
+  .info-box {
+    display: none; background: #1e2330; border: 1px solid #2d3348;
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
+    font-size: 0.82rem; color: #94a3b8; line-height: 1.6;
+  }
+  .info-box span { color: #c084fc; font-weight: 500; }
+  .frame-wrapper {
+    display: none; border: 2px dashed #2d3348; border-radius: 10px;
+    overflow: hidden; position: relative;
+  }
+  .frame-label {
+    background: #1e2330; padding: 8px 14px;
+    font-size: 0.75rem; color: #64748b; border-bottom: 1px solid #2d3348;
+  }
+  iframe {
+    width: 100%; height: 520px; border: none; display: block;
+    background: #fff;
+  }
+  .overlay-demo {
+    display: none; position: absolute; top: 60px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(99,102,241,0.15); border: 2px solid #6366f1;
+    border-radius: 8px; padding: 10px 18px; color: #a5b4fc;
+    font-size: 0.8rem; pointer-events: none; white-space: nowrap;
+  }
+  .toggle-row { margin-top: 10px; display: flex; gap: 10px; align-items: center; font-size: 0.82rem; color: #64748b; }
+  label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  input[type="checkbox"] { accent-color: #6366f1; }
+</style>
+</head>
+<body>
+
+<h1>Clickjacking Tester</h1>
+<p class="subtitle">Tests whether a target URL can be embedded in an iframe (CVE proof-of-concept)</p>
+
+<div class="input-row">
+  <input type="url" id="urlInput" placeholder="https://example.com" value="https://example.com" />
+  <button onclick="test()">Test</button>
+</div>
+
+<div id="resultBanner" class="result-banner"></div>
+<div id="infoBox" class="info-box"></div>
+
+<div id="frameWrapper" class="frame-wrapper">
+  <div class="frame-label" id="frameLabel">Loading…</div>
+  <iframe id="frame" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+  <div id="overlayDemo" class="overlay-demo">⚠ Attacker overlay would go here</div>
+</div>
+
+<div class="toggle-row" id="toggleRow" style="display:none">
+  <label><input type="checkbox" id="showOverlay" onchange="toggleOverlay()"> Show simulated overlay</label>
+</div>
+
+<script>
+function test() {
+  const raw = document.getElementById('urlInput').value.trim();
+  if (!raw) return;
+
+  // Normalise URL
+  let url = raw;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+  const banner  = document.getElementById('resultBanner');
+  const info    = document.getElementById('infoBox');
+  const wrapper = document.getElementById('frameWrapper');
+  const frame   = document.getElementById('frame');
+  const label   = document.getElementById('frameLabel');
+  const toggleRow = document.getElementById('toggleRow');
+
+  // Reset
+  banner.style.display = 'none';
+  info.style.display   = 'none';
+  wrapper.style.display = 'none';
+  toggleRow.style.display = 'none';
+  document.getElementById('overlayDemo').style.display = 'none';
+  document.getElementById('showOverlay').checked = false;
+
+  label.textContent = 'Loading ' + url + ' …';
+  wrapper.style.display = 'block';
+
+  let settled = false;
+
+  frame.onload = () => {
+    if (settled) return;
+    settled = true;
+
+    // Try accessing contentDocument — same-origin pages allow it,
+    // but cross-origin frames with X-Frame-Options/CSP still load
+    // a blank page, so we check the href via location.
+    let accessible = false;
+    try {
+      const loc = frame.contentWindow.location.href;
+      accessible = loc && loc !== 'about:blank';
+    } catch(e) {
+      accessible = true; // cross-origin but loaded = no block
+    }
+
+    // Heuristic: if about:blank, it was blocked by browser before load
+    let href = '';
+    try { href = frame.contentWindow.location.href; } catch(e) { href = url; }
+
+    const blocked = (href === 'about:blank' || href === '');
+
+    showResult(url, !blocked, label, banner, info, toggleRow);
+  };
+
+  frame.onerror = () => {
+    if (settled) return;
+    settled = true;
+    showResult(url, false, label, banner, info, toggleRow);
+  };
+
+  // Fallback timeout — some blocks never fire onload
+  setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    let href = '';
+    try { href = frame.contentWindow.location.href; } catch(e) { href = url; }
+    const blocked = (href === 'about:blank' || href === '');
+    showResult(url, !blocked, label, banner, info, toggleRow);
+  }, 6000);
+
+  frame.src = url;
+}
+
+function showResult(url, loaded, label, banner, info, toggleRow) {
+  label.textContent = url;
+  banner.style.display = 'block';
+  info.style.display   = 'block';
+  toggleRow.style.display = 'flex';
+
+  if (loaded) {
+    banner.className = 'result-banner vulnerable';
+    banner.textContent = '⚠ VULNERABLE — Page loaded inside iframe. Clickjacking may be possible.';
+    info.innerHTML = `
+      <span>Finding:</span> The target did not send <code>X-Frame-Options</code> or a
+      <code>Content-Security-Policy: frame-ancestors</code> directive that blocked framing.<br><br>
+      <span>Impact:</span> An attacker can overlay transparent UI on top of this page and trick
+      users into performing unintended actions (likes, purchases, auth grants).<br><br>
+      <span>Remediation:</span> Add <code>X-Frame-Options: DENY</code> (or <code>SAMEORIGIN</code>)
+      and/or <code>Content-Security-Policy: frame-ancestors 'self'</code> to the response headers.
+    `;
+  } else {
+    banner.className = 'result-banner protected';
+    banner.textContent = '✓ PROTECTED — Browser blocked the iframe load.';
+    info.innerHTML = `
+      <span>Result:</span> The browser refused to render the page inside an iframe, which indicates
+      the server sends <code>X-Frame-Options: DENY / SAMEORIGIN</code> or
+      <code>Content-Security-Policy: frame-ancestors</code>.<br><br>
+      <span>Note:</span> Confirm in DevTools → Network → Response Headers to see the exact directive.
+      Some pages block based on referer or JS frame-busting instead of HTTP headers.
+    `;
+  }
+}
+
+function toggleOverlay() {
+  const show = document.getElementById('showOverlay').checked;
+  document.getElementById('overlayDemo').style.display = show ? 'block' : 'none';
+}
+
+// Allow Enter key
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') test();
+});
+</script>
+</body>
+</html>
